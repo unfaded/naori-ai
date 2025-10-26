@@ -1,6 +1,6 @@
 # Naori AI
 
-A provider-agnostic Rust library for interacting with AI services. Switch between Ollama, Anthropic, OpenAI, and OpenRouter with identical code.
+A provider-agnostic Rust library for interacting with AI services. Switch between Ollama, Anthropic, OpenAI, and any OpenAI-compatible API with identical code.
 
 [![Crates.io](https://img.shields.io/crates/v/naori-ai.svg)](https://crates.io/crates/naori-ai)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -17,7 +17,7 @@ A provider-agnostic Rust library for interacting with AI services. Switch betwee
 
 ## Supported Providers
 
-Ollama, Anthropic, OpenAI, and OpenRouter all support chat, streaming, vision, tools, and model management through the same interface.
+Ollama, Anthropic, and OpenAI all support chat, streaming, vision, tools, and model management through the same interface. Additionally, any OpenAI-compatible API can be used via custom base URL configuration.
 
 ## Quick Start
 
@@ -41,8 +41,7 @@ Set API keys via environment variables for the providers you want to use
 
 ```bash
 export OPENAI_API_KEY="your-openai-key"
-export ANTHROPIC_API_KEY="your-anthropic-key" 
-export OPENROUTER_API_KEY="your-openrouter-key"
+export ANTHROPIC_API_KEY="your-anthropic-key"
 ```
 
 ## Examples
@@ -51,7 +50,7 @@ The `examples/` directory contains three comprehensive examples demonstrating al
 
 ### Chat
 
-Interactive chat application with provider selection menu (Ollama, Anthropic, OpenAI, OpenRouter) and automatic model discovery. Implements streaming chat responses, tool calling with custom functions (weather lookup, password generation), conversation history management, and error handling.
+Interactive chat application with provider selection menu (Ollama, Anthropic, OpenAI) and automatic model discovery. Implements streaming chat responses, tool calling with custom functions (weather lookup, password generation), conversation history management, and error handling.
 
 ### Vision Chat
 
@@ -73,15 +72,18 @@ cd examples/ollama-management && cargo run
 
 ### Creating Clients
 
-Besides constructing the client, the rest of the code is provider agnostic.
+Besides constructing the client, the rest of the code is completely provider agnostic.
 ```rust
 // Local Ollama instance
-let client = NaoriAI::ollama("http://localhost:11434".to_string(), "qwen3:8b".to_string());
+let client = NaoriAI::ollama("http://localhost:11434".to_string(), "qwen3-coder:30b".to_string());
 
 // Cloud providers
-let client = NaoriAI::openai(api_key, "gpt-4".to_string());
-let client = NaoriAI::anthropic(api_key, "claude-3-sonnet-20240229".to_string());
-let client = NaoriAI::openrouter(api_key, "anthropic/claude-sonnet-4".to_string());
+let client = NaoriAI::openai(api_key, "gpt-5".to_string());
+let client = NaoriAI::anthropic(api_key, "claude-sonnet-4.5".to_string());
+let client = NaoriAI::openrouter(api_key, "anthropic/claude-sonnet-4.5".to_string());
+
+// OpenAI-compatible APIs
+let client = NaoriAI::openai_custom(api_key, "grok-code-fast-1".to_string(), "https://api.x.ai/v1".to_string());
 ```
 
 ### Core
@@ -109,7 +111,7 @@ let client = NaoriAI::openrouter(api_key, "anthropic/claude-sonnet-4".to_string(
 - `get_available_models()` - List available models (works with all providers)
 
 #### Usage Tracking
-- Token usage automatically tracked in streaming responses via `ChatStreamItem.usage`
+- Token usage automatically tracked in streaming responses via `ChatStreamItem.usage` (prompt tokens, completion tokens, total tokens)
 
 #### Ollama Management
 - `show_model_info(model)` - Get model details (Ollama only)  
@@ -159,8 +161,7 @@ while let Some(item) = stream.next().await {
 ```
 
 Provider-specific usage details:
-- **OpenAI**: Includes usage in final chunk with `stream_options: {include_usage: true}`
-- **OpenRouter**: Usage included in streaming response metadata
+- **OpenAI & Compatible APIs**: Includes usage in final chunk with `stream_options: {include_usage: true}`
 - **Anthropic**: Usage provided via `MessageDelta` events in streaming
 - **Ollama**: Usage from `prompt_eval_count` and `eval_count` fields
 
@@ -176,6 +177,18 @@ if client.is_fallback_mode().await {
 // Enable debug mode to see raw XML
 client.set_debug_mode(true);
 ```
+
+## OpenAI-Compatible APIs
+
+Any OpenAI-compatible API can be used with the `openai_custom()` constructor. Examples:
+
+```rust
+// Groq
+let client = NaoriAI::openai_custom(groq_api_key, "mixtral-8x7b-32768".to_string(), 
+    "https://api.groq.com/openai/v1".to_string());
+```
+
+All OpenAI-compatible APIs work seamlessly with the same chat, streaming, vision, and tool-calling features.
 
 ## License
 
