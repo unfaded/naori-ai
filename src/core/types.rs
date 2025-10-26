@@ -37,7 +37,6 @@ pub struct TokenUsage {
     pub prompt_tokens: Option<u32>,
     pub completion_tokens: Option<u32>,
     pub total_tokens: Option<u32>,
-    pub cost_usd: Option<f64>, // Estimated cost in USD
 }
 
 impl TokenUsage {
@@ -46,7 +45,6 @@ impl TokenUsage {
             prompt_tokens: None,
             completion_tokens: None,
             total_tokens: None,
-            cost_usd: None,
         }
     }
 
@@ -55,7 +53,6 @@ impl TokenUsage {
             prompt_tokens: Some(prompt),
             completion_tokens: Some(completion),
             total_tokens: Some(prompt + completion),
-            cost_usd: None,
         }
     }
 }

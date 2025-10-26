@@ -8,31 +8,6 @@ use bytes::Bytes;
 use crate::core::{Message, ToolCall, ChatStreamItem, Tool, TokenUsage};
 use super::types::*;
 
-// Manual Anthropic model pricing function (based on official Anthropic pricing)
-fn get_anthropic_model_pricing(model: &str) -> (f64, f64) {
-    match model {
-        // Claude 4 series
-        "claude-opus-4-1-20250805" => (15.00e-6, 75.00e-6), // Claude Opus 4.1: $15 / $75
-        "claude-opus-4-20250514" => (15.00e-6, 75.00e-6), // Claude Opus 4: $15 / $75
-        "claude-sonnet-4-20250514" => (3.00e-6, 15.00e-6), // Claude Sonnet 4: $3 / $15
-        
-        // Claude 3.7 series
-        "claude-3-7-sonnet-20250219" => (3.00e-6, 15.00e-6), // Claude Sonnet 3.7: $3 / $15
-        
-        // Claude 3.5 series
-        "claude-3-5-sonnet-20241022" | "claude-3-5-sonnet-latest" => (3.00e-6, 15.00e-6), // Claude Sonnet 3.5 (New): $3 / $15
-        "claude-3-5-sonnet-20240620" => (3.00e-6, 15.00e-6), // Claude Sonnet 3.5 (Old): $3 / $15
-        "claude-3-5-haiku-20241022" | "claude-3-5-haiku-latest" => (0.80e-6, 4.00e-6), // Claude Haiku 3.5: $0.80 / $4
-        
-        // Claude 3 series (Legacy)
-        "claude-3-opus-20240229" => (15.00e-6, 75.00e-6), // Claude Opus 3 (Legacy): $15 / $75
-        "claude-3-haiku-20240307" => (0.25e-6, 1.25e-6), // Claude Haiku 3: $0.25 / $1.25
-        
-        // Default fallback for unknown models
-        _ => (0.0, 0.0),
-    }
-}
-
 pub struct AnthropicClient {
     client: Client,
     api_key: String,
@@ -198,7 +173,7 @@ impl AnthropicClient {
         let stream = response.bytes_stream();
         
         // Create a stateful stream processor
-        Ok(Box::pin(AnthropicStreamProcessor::new(stream, self.model.clone())))
+        Ok(Box::pin(AnthropicStreamProcessor::new(stream)))
     }
 
     pub async fn send_chat_request_no_stream(
@@ -263,25 +238,18 @@ struct AnthropicStreamProcessor {
     accumulating_tools: HashMap<String, (String, String)>,
     pending_results: std::collections::VecDeque<Result<ChatStreamItem, String>>,
     usage: Option<TokenUsage>,
-    model: String,
 }
 
 impl AnthropicStreamProcessor {
-    fn new(stream: impl Stream<Item = Result<Bytes, reqwest::Error>> + Send + 'static, model: String) -> Self {
+    fn new(stream: impl Stream<Item = Result<Bytes, reqwest::Error>> + Send + 'static) -> Self {
         Self {
             inner: Box::pin(stream),
             accumulating_tools: HashMap::new(),
             pending_results: std::collections::VecDeque::new(),
             usage: None,
-            model,
         }
     }
     
-    // Calculate cost based on token usage
-    fn calculate_cost(&self, prompt_tokens: u32, completion_tokens: u32) -> f64 {
-        let (input_price, output_price) = get_anthropic_model_pricing(&self.model);
-        (prompt_tokens as f64 * input_price) + (completion_tokens as f64 * output_price)
-    }
 }
 
 impl Stream for AnthropicStreamProcessor {
@@ -374,12 +342,10 @@ impl Stream for AnthropicStreamProcessor {
                                             }
                                             StreamingEvent::MessageDelta { delta } => {
                                                 if let Some(usage) = delta.usage {
-                                                    let cost_usd = Some(self.calculate_cost(usage.input_tokens, usage.output_tokens));
                                                     self.usage = Some(TokenUsage {
                                                         prompt_tokens: Some(usage.input_tokens),
                                                         completion_tokens: Some(usage.output_tokens),
                                                         total_tokens: Some(usage.input_tokens + usage.output_tokens),
-                                                        cost_usd,
                                                     });
                                                 }
                                             }

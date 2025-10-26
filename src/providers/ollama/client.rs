@@ -438,13 +438,10 @@ impl OllamaClient {
                                             let usage = if chat_response.done {
                                                 if let (Some(prompt_tokens), Some(completion_tokens)) = 
                                                     (chat_response.prompt_eval_count, chat_response.eval_count) {
-                                                    // Ollama is free (local), so cost is always $0
-                                                    let cost_usd = Some(0.0);
                                                     Some(TokenUsage {
                                                         prompt_tokens: Some(prompt_tokens),
                                                         completion_tokens: Some(completion_tokens),
                                                         total_tokens: Some(prompt_tokens + completion_tokens),
-                                                        cost_usd,
                                                     })
                                                 } else {
                                                     None
