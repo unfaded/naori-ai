@@ -72,6 +72,7 @@ pub struct OpenAIClient {
     api_key: String,
     pub model: String,
     tools: Vec<Tool>,
+    base_url: String,
 }
 
 impl OpenAIClient {
@@ -81,7 +82,22 @@ impl OpenAIClient {
             api_key,
             model,
             tools: Vec::new(),
+            base_url: "https://api.openai.com/v1".to_string(),
         }
+    }
+
+    pub fn with_base_url(api_key: String, model: String, base_url: String) -> Self {
+        Self {
+            client: Client::new(),
+            api_key,
+            model,
+            tools: Vec::new(),
+            base_url,
+        }
+    }
+
+    pub fn set_base_url(&mut self, base_url: String) {
+        self.base_url = base_url;
     }
 
     pub async fn add_tool(&mut self, tool: Tool) -> Result<(), Box<dyn Error>> {
@@ -108,7 +124,7 @@ impl OpenAIClient {
     pub async fn get_available_models(&self) -> Result<Vec<OpenAIModel>, Box<dyn Error>> {
         let response = self
             .client
-            .get("https://api.openai.com/v1/models")
+            .get(&format!("{}/models", self.base_url))
             .header("Authorization", format!("Bearer {}", self.api_key))
             .send()
             .await?;
@@ -251,7 +267,7 @@ impl OpenAIClient {
 
         let response = self
             .client
-            .post("https://api.openai.com/v1/chat/completions")
+            .post(&format!("{}/chat/completions", self.base_url))
             .header("Authorization", format!("Bearer {}", self.api_key))
             .header("content-type", "application/json")
             .json(&request)

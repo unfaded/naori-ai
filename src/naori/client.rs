@@ -7,13 +7,11 @@ use crate::core::{Message, ToolCall, ChatStreamItem, PullProgress, ModelInfo, To
 use crate::providers::ollama::{OllamaClient, Model};
 use crate::providers::anthropic::AnthropicClient;
 use crate::providers::openai::OpenAIClient;
-use crate::providers::openrouter::OpenRouterClient;
 
 pub enum Provider {
     Ollama(OllamaClient),
     Anthropic(AnthropicClient),
     OpenAI(OpenAIClient),
-    OpenRouter(OpenRouterClient),
 }
 
 pub struct NaoriAI {
@@ -42,10 +40,21 @@ impl NaoriAI {
         }
     }
 
-    /// Create OpenRouter client with API key and model name
+    /// Create OpenRouter client with API key and model name (wraps OpenAI with OpenRouter base URL)
     pub fn openrouter(api_key: String, model: String) -> Self {
         Self {
-            provider: Provider::OpenRouter(OpenRouterClient::new(api_key, model)),
+            provider: Provider::OpenAI(OpenAIClient::with_base_url(
+                api_key,
+                model,
+                "https://openrouter.ai/api/v1".to_string(),
+            )),
+        }
+    }
+
+    /// Create OpenAI client with custom base URL (for vLLM, local deployments, etc.)
+    pub fn openai_custom(api_key: String, model: String, base_url: String) -> Self {
+        Self {
+            provider: Provider::OpenAI(OpenAIClient::with_base_url(api_key, model, base_url)),
         }
     }
 
@@ -55,7 +64,6 @@ impl NaoriAI {
             Provider::Ollama(client) => client.add_tool(tool).await,
             Provider::Anthropic(client) => client.add_tool(tool).await,
             Provider::OpenAI(client) => client.add_tool(tool).await,
-            Provider::OpenRouter(client) => client.add_tool(tool).await,
         }
     }
 
@@ -65,7 +73,6 @@ impl NaoriAI {
             Provider::Ollama(client) => client.is_fallback_mode().await,
             Provider::Anthropic(client) => client.is_fallback_mode().await,
             Provider::OpenAI(client) => client.is_fallback_mode().await,
-            Provider::OpenRouter(_) => false,
         }
     }
 
@@ -75,7 +82,6 @@ impl NaoriAI {
             Provider::Ollama(client) => client.set_debug_mode(debug),
             Provider::Anthropic(client) => client.set_debug_mode(debug),
             Provider::OpenAI(client) => client.set_debug_mode(debug),
-            Provider::OpenRouter(_) => {},
         }
     }
 
@@ -85,7 +91,6 @@ impl NaoriAI {
             Provider::Ollama(client) => client.debug_mode(),
             Provider::Anthropic(client) => client.debug_mode(),
             Provider::OpenAI(client) => client.debug_mode(),
-            Provider::OpenRouter(_) => false,
         }
     }
 
@@ -95,7 +100,6 @@ impl NaoriAI {
             Provider::Ollama(client) => client.supports_tool_calls().await,
             Provider::Anthropic(client) => client.supports_tool_calls().await,
             Provider::OpenAI(client) => client.supports_tool_calls().await,
-            Provider::OpenRouter(client) => client.supports_tool_calls().await,
         }
     }
 
@@ -108,7 +112,6 @@ impl NaoriAI {
             Provider::Ollama(client) => client.send_chat_request(messages).await,
             Provider::Anthropic(client) => client.send_chat_request(messages).await,
             Provider::OpenAI(client) => client.send_chat_request(messages).await,
-            Provider::OpenRouter(client) => client.send_chat_request(messages).await,
         }
     }
 
@@ -121,7 +124,6 @@ impl NaoriAI {
             Provider::Ollama(client) => client.send_chat_request_no_stream(messages).await,
             Provider::Anthropic(client) => client.send_chat_request_no_stream(messages).await,
             Provider::OpenAI(client) => client.send_chat_request_no_stream(messages).await,
-            Provider::OpenRouter(client) => client.send_chat_request_no_stream(messages).await,
         }
     }
 
@@ -149,19 +151,6 @@ impl NaoriAI {
             }
             Provider::OpenAI(_) => {
                 // For OpenAI, images should be encoded in the messages directly
-                let mut messages_with_images = messages.to_vec();
-                if let Some(last_message) = messages_with_images.last_mut() {
-                    let mut encoded_images = Vec::new();
-                    for image_path in image_paths {
-                        let encoded = self.encode_image_file(&image_path).await?;
-                        encoded_images.push(encoded);
-                    }
-                    last_message.images = Some(encoded_images);
-                }
-                self.send_chat_request(&messages_with_images).await
-            }
-            Provider::OpenRouter(_) => {
-                // For OpenRouter, images should be encoded in the messages directly
                 let mut messages_with_images = messages.to_vec();
                 if let Some(last_message) = messages_with_images.last_mut() {
                     let mut encoded_images = Vec::new();
@@ -210,19 +199,6 @@ impl NaoriAI {
                 }
                 self.send_chat_request_no_stream(&messages_with_images).await
             }
-            Provider::OpenRouter(_) => {
-                // For OpenRouter, images should be encoded in the messages directly
-                let mut messages_with_images = messages.to_vec();
-                if let Some(last_message) = messages_with_images.last_mut() {
-                    let mut encoded_images = Vec::new();
-                    for image_path in image_paths {
-                        let encoded = self.encode_image_file(&image_path).await?;
-                        encoded_images.push(encoded);
-                    }
-                    last_message.images = Some(encoded_images);
-                }
-                self.send_chat_request_no_stream(&messages_with_images).await
-            }
         }
     }
 
@@ -249,19 +225,6 @@ impl NaoriAI {
             }
             Provider::OpenAI(_) => {
                 // For OpenAI, images should be encoded in the messages directly
-                let mut messages_with_images = messages.to_vec();
-                if let Some(last_message) = messages_with_images.last_mut() {
-                    let mut encoded_images = Vec::new();
-                    for image_data in images_data {
-                        let encoded = self.encode_image_data(image_data).await?;
-                        encoded_images.push(encoded);
-                    }
-                    last_message.images = Some(encoded_images);
-                }
-                self.send_chat_request(&messages_with_images).await
-            }
-            Provider::OpenRouter(_) => {
-                // For OpenRouter, images should be encoded in the messages directly
                 let mut messages_with_images = messages.to_vec();
                 if let Some(last_message) = messages_with_images.last_mut() {
                     let mut encoded_images = Vec::new();
@@ -310,19 +273,6 @@ impl NaoriAI {
                 }
                 self.send_chat_request_no_stream(&messages_with_images).await
             }
-            Provider::OpenRouter(_) => {
-                // For OpenRouter, images should be encoded in the messages directly
-                let mut messages_with_images = messages.to_vec();
-                if let Some(last_message) = messages_with_images.last_mut() {
-                    let mut encoded_images = Vec::new();
-                    for image_data in images_data {
-                        let encoded = self.encode_image_data(image_data).await?;
-                        encoded_images.push(encoded);
-                    }
-                    last_message.images = Some(encoded_images);
-                }
-                self.send_chat_request_no_stream(&messages_with_images).await
-            }
         }
     }
 
@@ -343,17 +293,6 @@ impl NaoriAI {
             }
             Provider::OpenAI(client) => {
                 // Convert prompt to messages format for OpenAI
-                let messages = vec![Message {
-                    role: "user".to_string(),
-                    content: prompt.to_string(),
-                    images: None,
-                    tool_calls: None,
-                }];
-                let (response, _) = client.send_chat_request_no_stream(&messages).await?;
-                Ok(response)
-            }
-            Provider::OpenRouter(client) => {
-                // Convert prompt to messages format for OpenRouter
                 let messages = vec![Message {
                     role: "user".to_string(),
                     content: prompt.to_string(),
@@ -407,23 +346,6 @@ impl NaoriAI {
                 });
                 Ok(Box::pin(mapped_stream))
             }
-            Provider::OpenRouter(client) => {
-                // Convert prompt to messages format for OpenRouter and convert stream
-                let messages = vec![Message {
-                    role: "user".to_string(),
-                    content: prompt.to_string(),
-                    images: None,
-                    tool_calls: None,
-                }];
-                let stream = client.send_chat_request(&messages).await?;
-                let mapped_stream = stream.map(|item| {
-                    match item {
-                        Ok(chat_item) => Ok(chat_item.content),
-                        Err(e) => Err(e),
-                    }
-                });
-                Ok(Box::pin(mapped_stream))
-            }
         }
     }
 
@@ -460,9 +382,6 @@ impl NaoriAI {
                     created: Some(m.created),
                 }).collect())
             }
-            Provider::OpenRouter(client) => {
-                client.get_available_models().await.map_err(|e| e.into())
-            }
         }
     }
 
@@ -480,7 +399,6 @@ impl NaoriAI {
             Provider::Ollama(client) => client.show_model_info(model_name).await,
             Provider::Anthropic(_) => Err("show_model_info is not supported for Anthropic provider".into()),
             Provider::OpenAI(_) => Err("show_model_info is not supported for OpenAI provider".into()),
-            Provider::OpenRouter(_) => Err("show_model_info is not supported for OpenRouter provider".into()),
         }
     }
 
@@ -490,7 +408,6 @@ impl NaoriAI {
             Provider::Ollama(client) => client.pull_model(model_name).await,
             Provider::Anthropic(_) => Err("pull_model is not supported for Anthropic provider".into()),
             Provider::OpenAI(_) => Err("pull_model is not supported for OpenAI provider".into()),
-            Provider::OpenRouter(_) => Err("pull_model is not supported for OpenRouter provider".into()),
         }
     }
 
@@ -503,7 +420,6 @@ impl NaoriAI {
             Provider::Ollama(client) => client.pull_model_stream(model_name).await,
             Provider::Anthropic(_) => Err("pull_model_stream is not supported for Anthropic provider".into()),
             Provider::OpenAI(_) => Err("pull_model_stream is not supported for OpenAI provider".into()),
-            Provider::OpenRouter(_) => Err("pull_model_stream is not supported for OpenRouter provider".into()),
         }
     }
 
@@ -513,7 +429,6 @@ impl NaoriAI {
             Provider::Ollama(client) => client.handle_tool_calls(tool_calls).await,
             Provider::Anthropic(client) => client.handle_tool_calls(tool_calls).await,
             Provider::OpenAI(client) => client.handle_tool_calls(tool_calls).await,
-            Provider::OpenRouter(client) => client.handle_tool_calls(tool_calls).await,
         }
     }
 
@@ -523,7 +438,6 @@ impl NaoriAI {
             Provider::Ollama(client) => client.process_fallback_response(content).await,
             Provider::Anthropic(client) => client.process_fallback_response(content).await,
             Provider::OpenAI(client) => client.process_fallback_response(content).await,
-            Provider::OpenRouter(client) => client.process_fallback_response(content).await,
         }
     }
 
@@ -533,7 +447,6 @@ impl NaoriAI {
             Provider::Ollama(client) => &client.model,
             Provider::Anthropic(client) => &client.model,
             Provider::OpenAI(client) => &client.model,
-            Provider::OpenRouter(client) => &client.model,
         }
     }
 
@@ -543,7 +456,6 @@ impl NaoriAI {
             Provider::Ollama(client) => Some(client),
             Provider::Anthropic(_) => None,
             Provider::OpenAI(_) => None,
-            Provider::OpenRouter(_) => None,
         }
     }
 
@@ -553,7 +465,6 @@ impl NaoriAI {
             Provider::Ollama(client) => Some(client),
             Provider::Anthropic(_) => None,
             Provider::OpenAI(_) => None,
-            Provider::OpenRouter(_) => None,
         }
     }
 
@@ -563,7 +474,6 @@ impl NaoriAI {
             Provider::Ollama(_) => None,
             Provider::Anthropic(client) => Some(client),
             Provider::OpenAI(_) => None,
-            Provider::OpenRouter(_) => None,
         }
     }
 
@@ -573,7 +483,6 @@ impl NaoriAI {
             Provider::Ollama(_) => None,
             Provider::Anthropic(client) => Some(client),
             Provider::OpenAI(_) => None,
-            Provider::OpenRouter(_) => None,
         }
     }
 
