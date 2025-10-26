@@ -1,9 +1,9 @@
 [package]
-name = "mono-ai"
+name = "naori-ai"
 edition = "2024"
 version = "2.1.0"
 description = "Provider-agnostic Rust AI library"
-repository = "https://github.com/unfaded/mono-ai"
+repository = "https://github.com/unfaded/naori-ai"
 readme = "README.md"
 license = "MIT"
 authors = ["unfaded"]

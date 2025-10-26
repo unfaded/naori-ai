@@ -1,8 +1,8 @@
-# Mono AI
+# Naori AI
 
 A provider-agnostic Rust library for interacting with AI services. Switch between Ollama, Anthropic, OpenAI, and OpenRouter with identical code.
 
-[![Crates.io](https://img.shields.io/crates/v/mono-ai.svg)](https://crates.io/crates/mono-ai)
+[![Crates.io](https://img.shields.io/crates/v/naori-ai.svg)](https://crates.io/crates/naori-ai)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 ## Features
@@ -23,7 +23,7 @@ Ollama, Anthropic, OpenAI, and OpenRouter all support chat, streaming, vision, t
 
 Add library:
 ```bash
-cargo add mono-ai mono-ai-macros
+cargo add naori-ai naori-ai-macros
 ```
 
 Add dependencies:
@@ -76,12 +76,12 @@ cd examples/ollama-management && cargo run
 Besides constructing the client, the rest of the code is provider agnostic.
 ```rust
 // Local Ollama instance
-let client = MonoAI::ollama("http://localhost:11434".to_string(), "qwen3:8b".to_string());
+let client = NaoriAI::ollama("http://localhost:11434".to_string(), "qwen3:8b".to_string());
 
 // Cloud providers
-let client = MonoAI::openai(api_key, "gpt-4".to_string());
-let client = MonoAI::anthropic(api_key, "claude-3-sonnet-20240229".to_string());
-let client = MonoAI::openrouter(api_key, "anthropic/claude-sonnet-4".to_string());
+let client = NaoriAI::openai(api_key, "gpt-4".to_string());
+let client = NaoriAI::anthropic(api_key, "claude-3-sonnet-20240229".to_string());
+let client = NaoriAI::openrouter(api_key, "anthropic/claude-sonnet-4".to_string());
 ```
 
 ### Core
@@ -121,7 +121,7 @@ let client = MonoAI::openrouter(api_key, "anthropic/claude-sonnet-4".to_string()
 Use the `#[tool]` macro to define tool functions
 
 ```rust
-use mono_ai_macros::tool;
+use naori_ai_macros::tool;
 
 /// The AI will see this doc comment
 /// Describe what your tool does and its purpose here

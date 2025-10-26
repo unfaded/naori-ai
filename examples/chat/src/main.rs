@@ -1,6 +1,6 @@
 use futures_util::StreamExt;
-use mono_ai::{Message, MonoAI};
-use mono_ai_macros::tool;
+use naori_ai::{Message, NaoriAI};
+use naori_ai_macros::tool;
 use std::io::{self, Write};
 use colored::*;
 
@@ -29,7 +29,7 @@ fn generate_password(length: usize) -> String {
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    println!("Mono AI Rust Library");
+    println!("Naori AI Rust Library");
     println!("This demonstrates streaming chat with optional tool calling");
 
     // Provider selection
@@ -248,9 +248,9 @@ fn get_user_choice(prompt: &str) -> Result<usize, Box<dyn std::error::Error>> {
     input.trim().parse().map_err(|_| "Invalid number".into())
 }
 
-async fn select_ollama_model() -> Result<MonoAI, Box<dyn std::error::Error>> {
+async fn select_ollama_model() -> Result<NaoriAI, Box<dyn std::error::Error>> {
     println!("\nConnecting to Ollama...");
-    let temp_client = MonoAI::ollama("http://localhost:11434".to_string(), "temp".to_string());
+    let temp_client = NaoriAI::ollama("http://localhost:11434".to_string(), "temp".to_string());
     
     let models = temp_client.list_local_models().await.map_err(|e| {
         println!("Failed to connect to Ollama: {}", e);
@@ -276,17 +276,17 @@ async fn select_ollama_model() -> Result<MonoAI, Box<dyn std::error::Error>> {
     let selected_model = &models[choice - 1];
     println!("\nSelected: {}", selected_model.name);
 
-    Ok(MonoAI::ollama("http://localhost:11434".to_string(), selected_model.name.clone()))
+    Ok(NaoriAI::ollama("http://localhost:11434".to_string(), selected_model.name.clone()))
 }
 
 async fn select_cloud_model<F>(
     provider_name: &str,
     env_var: &str,
     constructor: F,
-    model_filter: Option<fn(&mono_ai::core::MonoModel) -> bool>,
-) -> Result<MonoAI, Box<dyn std::error::Error>>
+    model_filter: Option<fn(&naori_ai::core::MonoModel) -> bool>,
+) -> Result<NaoriAI, Box<dyn std::error::Error>>
 where
-    F: Fn(String, String) -> MonoAI,
+    F: Fn(String, String) -> NaoriAI,
 {
     let api_key = get_api_key(env_var, provider_name)?;
     
@@ -348,7 +348,7 @@ where
     Ok(constructor(api_key, final_model_id))
 }
 
-async fn select_provider() -> Result<MonoAI, Box<dyn std::error::Error>> {
+async fn select_provider() -> Result<NaoriAI, Box<dyn std::error::Error>> {
     println!("Select AI Provider:");
     println!("1. Ollama (local)");
     println!("2. Anthropic (cloud)");
@@ -359,12 +359,12 @@ async fn select_provider() -> Result<MonoAI, Box<dyn std::error::Error>> {
 
     match choice {
         1 => select_ollama_model().await,
-        2 => select_cloud_model("Anthropic", "ANTHROPIC_API_KEY", MonoAI::anthropic, None).await,
+        2 => select_cloud_model("Anthropic", "ANTHROPIC_API_KEY", NaoriAI::anthropic, None).await,
         3 => {
-            let openai_filter = |m: &mono_ai::core::MonoModel| m.id.contains("gpt") || m.id.contains("o1");
-            select_cloud_model("OpenAI", "OPENAI_API_KEY", MonoAI::openai, Some(openai_filter)).await
+            let openai_filter = |m: &naori_ai::core::MonoModel| m.id.contains("gpt") || m.id.contains("o1");
+            select_cloud_model("OpenAI", "OPENAI_API_KEY", NaoriAI::openai, Some(openai_filter)).await
         }
-        4 => select_cloud_model("OpenRouter", "OPENROUTER_API_KEY", MonoAI::openrouter, None).await,
+        4 => select_cloud_model("OpenRouter", "OPENROUTER_API_KEY", NaoriAI::openrouter, None).await,
         _ => {
             println!("Invalid choice. Exiting.");
             Err("Invalid provider selection".into())

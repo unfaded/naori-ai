@@ -1,5 +1,5 @@
 use futures_util::StreamExt;
-use mono_ai::{Message, MonoAI};
+use naori_ai::{Message, NaoriAI};
 use std::io::{self, Write};
 use std::env;
 
@@ -34,9 +34,9 @@ fn get_user_choice(prompt: &str) -> Result<usize, Box<dyn std::error::Error>> {
     input.trim().parse().map_err(|_| "Invalid number".into())
 }
 
-async fn select_ollama_model() -> Result<MonoAI, Box<dyn std::error::Error>> {
+async fn select_ollama_model() -> Result<NaoriAI, Box<dyn std::error::Error>> {
     println!("\nConnecting to Ollama...");
-    let temp_client = MonoAI::ollama("http://localhost:11434".to_string(), "temp".to_string());
+    let temp_client = NaoriAI::ollama("http://localhost:11434".to_string(), "temp".to_string());
     
     let models = temp_client.list_local_models().await.map_err(|e| {
         println!("Failed to connect to Ollama: {}", e);
@@ -62,18 +62,18 @@ async fn select_ollama_model() -> Result<MonoAI, Box<dyn std::error::Error>> {
     let selected_model = &models[choice - 1];
     println!("\nSelected: {}", selected_model.name);
 
-    Ok(MonoAI::ollama("http://localhost:11434".to_string(), selected_model.name.clone()))
+    Ok(NaoriAI::ollama("http://localhost:11434".to_string(), selected_model.name.clone()))
 }
 
 async fn select_cloud_vision_model<F>(
     provider_name: &str,
     env_var: &str,
     constructor: F,
-    vision_filter: fn(&mono_ai::core::MonoModel) -> bool,
-    fallback_filter: Option<fn(&mono_ai::core::MonoModel) -> bool>,
-) -> Result<MonoAI, Box<dyn std::error::Error>>
+    vision_filter: fn(&naori_ai::core::MonoModel) -> bool,
+    fallback_filter: Option<fn(&naori_ai::core::MonoModel) -> bool>,
+) -> Result<NaoriAI, Box<dyn std::error::Error>>
 where
-    F: Fn(String, String) -> MonoAI,
+    F: Fn(String, String) -> NaoriAI,
 {
     let api_key = get_api_key(env_var, provider_name)?;
     
@@ -143,7 +143,7 @@ where
     Ok(constructor(api_key, final_model_id))
 }
 
-async fn select_provider() -> Result<MonoAI, Box<dyn std::error::Error>> {
+async fn select_provider() -> Result<NaoriAI, Box<dyn std::error::Error>> {
     println!("Select AI Provider:");
     println!("1. Ollama (local)");
     println!("2. Anthropic (cloud)");
@@ -156,29 +156,29 @@ async fn select_provider() -> Result<MonoAI, Box<dyn std::error::Error>> {
         1 => select_ollama_model().await,
         2 => {
             // All Anthropic models support vision
-            let anthropic_filter = |_: &mono_ai::core::MonoModel| true;
-            select_cloud_vision_model("Anthropic", "ANTHROPIC_API_KEY", MonoAI::anthropic, anthropic_filter, None).await
+            let anthropic_filter = |_: &naori_ai::core::MonoModel| true;
+            select_cloud_vision_model("Anthropic", "ANTHROPIC_API_KEY", NaoriAI::anthropic, anthropic_filter, None).await
         }
         3 => {
             // OpenAI vision models: GPT-4 with vision or GPT-4o
-            let vision_filter = |m: &mono_ai::core::MonoModel| {
+            let vision_filter = |m: &naori_ai::core::MonoModel| {
                 m.id.contains("gpt-4") && (m.id.contains("vision") || m.id.contains("gpt-4o"))
             };
-            let fallback_filter = |m: &mono_ai::core::MonoModel| {
+            let fallback_filter = |m: &naori_ai::core::MonoModel| {
                 m.id.contains("gpt-4") || m.id.contains("o1")
             };
-            select_cloud_vision_model("OpenAI", "OPENAI_API_KEY", MonoAI::openai, vision_filter, Some(fallback_filter)).await
+            select_cloud_vision_model("OpenAI", "OPENAI_API_KEY", NaoriAI::openai, vision_filter, Some(fallback_filter)).await
         }
         4 => {
             // OpenRouter vision models: GPT-4 vision, Claude, Gemini
-            let vision_filter = |m: &mono_ai::core::MonoModel| {
+            let vision_filter = |m: &naori_ai::core::MonoModel| {
                 let id_lower = m.id.to_lowercase();
                 (id_lower.contains("gpt-4") && (id_lower.contains("vision") || id_lower.contains("gpt-4o"))) ||
                 id_lower.contains("claude") ||
                 id_lower.contains("gemini") ||
                 m.id == "custom"
             };
-            select_cloud_vision_model("OpenRouter", "OPENROUTER_API_KEY", MonoAI::openrouter, vision_filter, None).await
+            select_cloud_vision_model("OpenRouter", "OPENROUTER_API_KEY", NaoriAI::openrouter, vision_filter, None).await
         }
         _ => {
             println!("Invalid choice. Exiting.");
@@ -192,7 +192,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let args: Vec<String> = env::args().collect();
     
     if args.len() < 2 {
-        println!("Chat Vision Example - Mono AI Library");
+        println!("Chat Vision Example - Naori AI Library");
         println!("\nUsage:");
         println!("  chat-vision <image_path>   - Analyze image and start chat");
         return Ok(());
@@ -200,7 +200,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     let image_path = &args[1];
 
-    println!("Chat Vision Example - Mono AI Library");
+    println!("Chat Vision Example - Naori AI Library");
     println!("Analyzing image: {}\n", image_path);
 
     // Provider selection

@@ -16,11 +16,11 @@ pub enum Provider {
     OpenRouter(OpenRouterClient),
 }
 
-pub struct MonoAI {
+pub struct NaoriAI {
     provider: Provider,
 }
 
-impl MonoAI {
+impl NaoriAI {
     /// Create Ollama client with endpoint URL and model name
     pub fn ollama(endpoint: String, model: String) -> Self {
         Self {

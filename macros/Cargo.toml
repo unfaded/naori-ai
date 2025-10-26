@@ -1,11 +1,11 @@
 [package]
-name = "mono-ai-macros"
-description = "procedural macros for tools in mono-ai"
+name = "naori-ai-macros"
+description = "procedural macros for tools in naori-ai"
 license = "MIT"
 version = "2.0.0"
 edition = "2024"
 readme = "../README.md"
-repository = "https://github.com/unfaded/mono-ai"
+repository = "https://github.com/unfaded/naori-ai"
 authors = ["unfaded"]
 
 [lib]

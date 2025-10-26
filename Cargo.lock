@@ -646,7 +646,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "mono-ai"
+name = "naori-ai"
 version = "2.1.0"
 dependencies = [
  "anyhow",

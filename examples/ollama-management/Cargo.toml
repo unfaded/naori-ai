@@ -4,6 +4,6 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
-mono-ai = { path = "../.." }
+naori-ai = { path = "../.." }
 tokio = { version = "1.47.1", features = ["full"] }
 futures-util = "0.3.31"
