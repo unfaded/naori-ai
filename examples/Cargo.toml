@@ -2,6 +2,7 @@
 resolver = "2"
 members = [
     "chat",
-    "chat-vision", 
+    "chat-vision",
+    "generation",
     "ollama-management",
 ]

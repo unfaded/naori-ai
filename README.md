@@ -46,25 +46,30 @@ export ANTHROPIC_API_KEY="your-anthropic-key"
 
 ## Examples
 
-The `examples/` directory contains three comprehensive examples demonstrating all library features, and outside of the constructor, all the code stays the same no matter the model
+The `examples/` directory contains four comprehensive examples demonstrating all library features, and outside of the constructor, all the code stays the same no matter the model
 
 ### Chat
 
-Interactive chat application with provider selection menu (Ollama, Anthropic, OpenAI) and automatic model discovery. Implements streaming chat responses, tool calling with custom functions (weather lookup, password generation), conversation history management, and error handling.
+Interactive chat application with provider selection menu (Ollama, Anthropic, OpenAI, OpenRouter) and automatic model discovery. Implements streaming chat responses, tool calling with custom functions (weather lookup, password generation), conversation history management, and error handling.
 
-### Vision Chat
+### Chat Vision
 
 Multimodal chat application for image analysis. Takes image file path as command line argument, performs initial analysis, then enables interactive conversation about the image. Handles base64 encoding, message formatting, conversation context preservation, streaming responses, and tool calls across all vision-capable models & providers.
 
+### Generation
+
+Simple text generation example demonstrating both streaming and non-streaming completion. Takes a prompt as command line argument and generates a response. Supports provider selection and shows token usage statistics. Perfect starting point for basic text generation use cases.
+
 ### Ollama Management
 
-Model management utility for Ollama instances. pulling models from registry with progress tracking, model inspection (templates, parameters), and lifecycle management.
+Model management utility for Ollama instances. Pulling models from registry with progress tracking, model inspection (templates, parameters), and lifecycle management.
 
 Run examples:
 
 ```bash
 cd examples/chat && cargo run
 cd examples/chat-vision && cargo run path/to/image.jpg
+cd examples/generation && cargo run "Write a haiku about coding"
 cd examples/ollama-management && cargo run
 ```
 

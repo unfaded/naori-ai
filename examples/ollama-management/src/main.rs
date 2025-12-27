@@ -10,7 +10,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!("Ollama Management Example - Naori AI Library");
         println!("This demonstrates Ollama-specific model management operations");
         println!("\nUsage:");
-        println!("  cargo run list                    - List local models");
+        println!("  cargo run list                    - List local & cloud models");
         println!("  cargo run pull <model>            - Download model with progress");
         println!("  cargo run info <model>            - Show detailed model information");
         println!("  cargo run generate <model> <text> - Simple text generation test");
@@ -26,7 +26,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
     match command.as_str() {
         "list" => {
-            println!("Listing local Ollama models...\n");
+            println!("Listing Ollama models...\n");
             
             let client = NaoriAI::ollama("http://localhost:11434".to_string(), "".to_string());
             let models = client.list_local_models().await?;
@@ -34,7 +34,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             if models.is_empty() {
                 println!("No models found. Use 'cargo run pull <model>' to download one.");
             } else {
-                println!("Local models:");
+                println!("Models:");
                 for model in models {
                     let size_gb = model.size as f64 / 1_073_741_824.0;
                     println!("- {} ({:.1} GB)", model.name, size_gb);

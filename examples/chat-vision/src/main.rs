@@ -49,7 +49,7 @@ async fn select_ollama_model() -> Result<NaoriAI, Box<dyn std::error::Error>> {
         return Err("No models available".into());
     }
 
-    println!("\nAvailable local models (all models support vision):");
+    println!("\nAvailable models (all models support vision):");
     for (i, model) in models.iter().enumerate() {
         println!("{}. {} ({:.1} GB)", i + 1, model.name, model.size as f64 / 1_073_741_824.0);
     }
@@ -145,7 +145,7 @@ where
 
 async fn select_provider() -> Result<NaoriAI, Box<dyn std::error::Error>> {
     println!("Select AI Provider:");
-    println!("1. Ollama (local)");
+    println!("1. Ollama (local & cloud)");
     println!("2. Anthropic (cloud)");
     println!("3. OpenAI (cloud)");
     println!("4. OpenRouter (cloud)");
