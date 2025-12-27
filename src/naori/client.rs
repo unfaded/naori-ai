@@ -103,6 +103,15 @@ impl NaoriAI {
         }
     }
 
+    /// Get provider capabilities (tool support, vision support)
+    pub async fn capabilities(&self) -> Result<crate::core::ProviderCapabilities, Box<dyn Error>> {
+        match &self.provider {
+            Provider::Ollama(client) => client.capabilities().await,
+            Provider::Anthropic(client) => client.capabilities().await,
+            Provider::OpenAI(client) => client.capabilities().await,
+        }
+    }
+
     /// Send chat request with real-time streaming response
     pub async fn send_chat_request(
         &self,

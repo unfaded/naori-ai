@@ -70,13 +70,20 @@ impl OllamaClient {
 
     pub async fn supports_tool_calls(&self) -> Result<bool, Box<dyn Error>> {
         let model_info = self.show_model_info(&self.model).await?;
-        
+
         // The definitive way to check tool support is the presence of .Tools in the template
         // All models that support tools use the .Tools variable in their prompt template
         let template = &model_info.template;
         let supports_tools = template.contains(".Tools") || template.contains(".tools");
-        
+
         Ok(supports_tools)
+    }
+
+    pub async fn capabilities(&self) -> Result<crate::core::ProviderCapabilities, Box<dyn Error>> {
+        Ok(crate::core::ProviderCapabilities {
+            supports_tools: self.supports_tool_calls().await.unwrap_or(false),
+            supports_vision: true,
+        })
     }
 
     pub async fn list_local_models(&self) -> Result<Vec<Model>, Box<dyn Error>> {

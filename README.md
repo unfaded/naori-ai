@@ -111,6 +111,7 @@ let client = NaoriAI::openai_custom(api_key, "grok-code-fast-1".to_string(), "ht
 - `supports_tool_calls()` - Check native tool support
 - `is_fallback_mode()` - Check if using XML fallback
 - `process_fallback_response(content)` - Parse fallback tool calls
+- `capabilities()` - Get provider capabilities (tool support, vision support)
 
 #### Model
 - `get_available_models()` - List available models (works with all providers)

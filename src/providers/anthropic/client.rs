@@ -46,6 +46,13 @@ impl AnthropicClient {
         Ok(true) // Anthropic Claude models support native tool calling
     }
 
+    pub async fn capabilities(&self) -> Result<crate::core::ProviderCapabilities, Box<dyn Error>> {
+        Ok(crate::core::ProviderCapabilities {
+            supports_tools: true,
+            supports_vision: true,
+        })
+    }
+
     pub async fn get_available_models(&self) -> Result<Vec<AnthropicModel>, Box<dyn Error>> {
         let response = self
             .client

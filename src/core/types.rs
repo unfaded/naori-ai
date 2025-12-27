@@ -80,3 +80,9 @@ pub struct ModelInfo {
     pub parameters: String,
     pub template: String,
 }
+
+#[derive(Debug, Clone)]
+pub struct ProviderCapabilities {
+    pub supports_tools: bool,
+    pub supports_vision: bool,
+}
